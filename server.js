@@ -1,18 +1,15 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const cors = require("cors");
 const axios = require("axios");
 
 const app = express();
-app.use(cors());
 app.use(bodyParser.json());
 
 const MERCHANT_ID = "682c6381dfc9ac0473670ecb";
-const KEY = "iw9?YRYgtNC?A2f#3gFC4zYa6fn6#2MHC1Bj"; // тестовый ключ
+const KEY = "iw9?YRYgtNC?A2f#3gFC4zYa6fn6#2MHC1Bj"; // Тестовый ключ
 
 app.post("/payme", async (req, res) => {
   const { name, phone } = req.body;
-  const orderId = "order_" + Date.now();
 
   try {
     const response = await axios.post(
@@ -23,7 +20,6 @@ app.post("/payme", async (req, res) => {
         params: {
           amount: 990000,
           account: {
-            order_id: orderId,
             phone,
             name,
           },
@@ -33,29 +29,26 @@ app.post("/payme", async (req, res) => {
       {
         headers: {
           Authorization:
-            "Basic " +
-            Buffer.from("Paycom:" + KEY).toString("base64"),
+            "Basic " + Buffer.from(MERCHANT_ID + ":" + KEY).toString("base64"),
           "Content-Type": "application/json",
         },
       }
     );
 
-    const invoiceUrl = response.data.result?.invoice_url;
-    if (!invoiceUrl) {
-      console.error("Invoice URL not found:", response.data);
-      return res.status(500).json({ error: "No invoice URL from Payme" });
+    const pay_url = response.data?.result?.receipt?.pay_url;
+    if (pay_url) {
+      res.json({ success: true, url: pay_url });
+    } else {
+      res.status(500).json({ success: false, error: "Payment link not found" });
     }
-
-    return res.json({ url: invoiceUrl });
-  } catch (err) {
-    console.error("Payme error:", err.response?.data || err.message);
-    return res.status(500).json({ error: "Payme request failed" });
+  } catch (error) {
+    console.error("Payme error:", error?.response?.data || error.message);
+    res.status(500).json({
+      success: false,
+      error: "Payme request failed",
+      details: error?.response?.data,
+    });
   }
-});
-
-app.post("/payme/callback", (req, res) => {
-  console.log("Callback received:", req.body);
-  res.send({ result: "ok" });
 });
 
 app.listen(3000, () => {
