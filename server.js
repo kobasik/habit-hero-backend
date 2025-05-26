@@ -14,13 +14,14 @@ app.post("/payme", async (req, res) => {
   const { name, phone } = req.body;
 
   try {
+console.log('Запрос от клиента:', { name, phone });
     const response = await axios.post(
       "https://checkout.test.paycom.uz/api",
       {
         jsonrpc: "2.0",
         method: "CreateInvoice",
         params: {
-          amount: 9900,
+          amount: 990000,
           account: {
             phone,
             name,
