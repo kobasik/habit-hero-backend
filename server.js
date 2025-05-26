@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const axios = require("axios");
 
 const app = express();
+app.use(cors());
 app.use(bodyParser.json());
 
 const MERCHANT_ID = "682c6381dfc9ac0473670ecb";
