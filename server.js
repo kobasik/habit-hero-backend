@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const bodyParser = require("body-parser");
 const axios = require("axios");
 
@@ -18,7 +19,7 @@ app.post("/payme", async (req, res) => {
         jsonrpc: "2.0",
         method: "CreateInvoice",
         params: {
-          amount: 990000,
+          amount: 9900,
           account: {
             phone,
             name,
