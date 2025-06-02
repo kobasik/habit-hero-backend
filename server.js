@@ -13,39 +13,39 @@ const KEY = "iw9?YRYgtNC?A2f#3gFC4zYa6fn6#2MHC1Bj"; // Тестовый ключ
 app.post("/payme", async (req, res) => {
   const { name, phone } = req.body;
 
-  try {
-console.log('Запрос от клиента:', { name, phone });
-    const response = await axios.post(
-      "https://checkout.test.paycom.uz/api",
-      {
-        jsonrpc: "2.0",
-        method: "CreateInvoice",
-        params: {
-          amount: 990000,
-          account: {
-            phone,
-            name,
-          },
-          merchant: MERCHANT_ID,
+try {
+  const response = await axios.post(
+    "https://checkout.test.paycom.uz/api",
+    {
+      id: "jsonrpc-2.0",
+      method: "CreateInvoice",
+      params: {
+        amount: 990000,
+        account: {
+          phone,
+          name,
         },
+        merchant: MERCHANT_ID,
       },
-      {
-        headers: {
-          Authorization:
-            "Basic " + Buffer.from(MERCHANT_ID + ":" + KEY).toString("base64"),
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    },
+    {
+      headers: {
+        Authorization:
+          "Basic " +
+          Buffer.from(MERCHANT_ID + ":" + KEY).toString("base64"),
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
-    const pay_url = response.data?.result?.receipt?.pay_url;
-    if (pay_url) {
-      res.json({ success: true, url: pay_url });
-    } else {
-      res.status(500).json({ success: false, error: "Payment link not found" }); } 
- catch (error) {
+  const pay_url = response.data?.result?.receipt?.pay_url;
+  if (pay_url) {
+    res.json({ success: true, url: pay_url });
+  } else {
+    res.status(500).json({ success: false, error: "Payment link not found" });
+  }
+} catch (error) {
   console.error("Ошибка при запросе в Payme:");
-  
   if (error.response) {
     console.error("Статус:", error.response.status);
     console.error("Данные:", error.response.data);
@@ -55,9 +55,11 @@ console.log('Запрос от клиента:', { name, phone });
     console.error("Ошибка:", error.message);
   }
 
-  return res.status(500).json({ error: 'Ошибка на сервере', details: error.message });
+  return res.status(500).json({
+    error: "Ошибка на сервере",
+    details: error.message,
+  });
 }
-
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
