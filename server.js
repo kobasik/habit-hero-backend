@@ -42,8 +42,7 @@ console.log('Запрос от клиента:', { name, phone });
     if (pay_url) {
       res.json({ success: true, url: pay_url });
     } else {
-      res.status(500).json({ success: false, error: "Payment link not found" });
-    }
+      res.status(500).json({ success: false, error: "Payment link not found" }); } 
  catch (error) {
   console.error("Ошибка при запросе в Payme:");
   
