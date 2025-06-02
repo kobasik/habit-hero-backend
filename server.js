@@ -44,15 +44,21 @@ console.log('Запрос от клиента:', { name, phone });
     } else {
       res.status(500).json({ success: false, error: "Payment link not found" });
     }
-  } catch (error) {
-    console.error("Payme error:", error?.response?.data || error.message);
-    res.status(500).json({
-      success: false,
-      error: "Payme request failed",
-      details: error?.response?.data,
-    });
+ catch (error) {
+  console.error("Ошибка при запросе в Payme:");
+  
+  if (error.response) {
+    console.error("Статус:", error.response.status);
+    console.error("Данные:", error.response.data);
+  } else if (error.request) {
+    console.error("Нет ответа от сервера:", error.request);
+  } else {
+    console.error("Ошибка:", error.message);
   }
-});
+
+  return res.status(500).json({ error: 'Ошибка на сервере', details: error.message });
+}
+
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
