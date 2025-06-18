@@ -23,15 +23,17 @@ app.post('/payme/init', async (req, res) => {
   const order_id = Date.now().toString();
   const amount = 990000; // 9900 сум = 990000 тийин
 
-  const payload = {
-    method: 'receipts.create',
-    params: {
-      amount,
-      account: {
-        order_id
-      }
+ const payload = {
+  method: 'receipts.create',
+  params: {
+    amount,
+    account: {
+      order_id,
+      full_name: name // добавляем имя
     }
-  };
+  }
+};
+
 
   try {
     const response = await axios.post(PAYME_URL, payload, {
