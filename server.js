@@ -60,7 +60,7 @@ const response = await axios.post('https://checkout.paycom.uz/api', receipt, {
   }
 });
 
-console.log('Payme response:', response.data);
+console.dir(response.data, { depth: null });
 
 const receiptId = response.data.result.receipt._id;
 const paymentLink = `https://checkout.paycom.uz/${receiptId}`;
