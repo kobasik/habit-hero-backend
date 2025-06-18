@@ -1,5 +1,14 @@
 
 import express from 'express';
+import cors from 'cors';
+
+const app = express();
+
+// Разрешаем запросы с Tilda
+app.use(cors({
+  origin: 'https://habituz.tilda.ws',
+}));
+
 import axios from 'axios';
 import dotenv from 'dotenv';
 import bodyParser from 'body-parser';
