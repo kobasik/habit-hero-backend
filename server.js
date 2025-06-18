@@ -53,7 +53,7 @@ app.post('/payme/init', async (req, res) => {
   }
 };
 
-const response = await axios.post('https://checkout.test.paycom.uz/api', receipt, {
+const response = await axios.post('https://checkout.paycom.uz/api', receipt, {
   headers: {
     'X-Auth': `${PAYME_ID}:${PAYME_KEY}`,
     'Content-Type': 'application/json'
