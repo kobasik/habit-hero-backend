@@ -1,58 +1,66 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const axios = require('axios');
-const cors = require('cors');
+import express from 'express'
+import cors from 'cors'
+import axios from 'axios'
+import { v4 as uuidv4 } from 'uuid'
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-const PAYME_URL = 'https://checkout.paycom.uz/api'; // БОЕВОЙ endpoint
+const app = express()
+app.use(cors())
+app.use(express.json())
 
-app.use(cors());
-app.use(bodyParser.json());
+const PAYME_URL = 'https://checkout.paycom.uz/api'
+const PAYME_ID = process.env.PAYME_ID
+const PAYME_KEY = process.env.PAYME_KEY
+const AUTH = Buffer.from(`${PAYME_ID}:${PAYME_KEY}`).toString('base64')
 
+// Главная точка входа
 app.post('/payme/init', async (req, res) => {
-  const { name, phone } = req.body;
-
-  const order_id = Date.now().toString(); // любой уникальный ID
-  const amount = 990000; // 9900 сум в тийинах
+  const { name, phone } = req.body
 
   const payload = {
+    id: Math.floor(Math.random() * 10000),
     method: 'receipts.create',
     params: {
-      amount,
+      amount: 990000, // 9900 сум = 990000 тийин
       account: {
-        order_id,
+        order_id: uuidv4() // можно логировать вместе с name, phone
       },
-    },
-  };
+      description: `Оплата подписки: ${name}, ${phone}`,
+      detail: {
+        receipt_type: 0,
+        items: [
+          {
+            title: 'Подписка Habit Hero',
+            price: 990000,
+            count: 1,
+            code: '123456789123456789', // любой ИКПУ код, можно тестовый
+            units: 241092,
+            vat_percent: 15,
+            package_code: '000000'
+          }
+        ]
+      }
+    }
+  }
 
   try {
-    const response = await axios.post(PAYME_URL, payload, {
-      auth: {
-        username: process.env.PAYME_ID,
-        password: process.env.PAYME_KEY,
-      },
+    const paymeResponse = await axios.post(PAYME_URL, payload, {
       headers: {
         'Content-Type': 'application/json',
-      },
-    });
+        Authorization: `Basic ${AUTH}`
+      }
+    })
 
-    if (response.data.error) {
-      console.error('Payme API error:', response.data.error);
-      return res.status(500).send('Ошибка Payme API: ' + response.data.error.message);
-    }
+    const receiptId = paymeResponse.data.result.receipt._id
+    const checkoutUrl = `https://checkout.paycom.uz/${receiptId}`
 
-    const receipt_id = response.data.result.receipt._id;
-    const checkout_url = `https://checkout.paycom.uz/${receipt_id}`;
-
-    res.json({ url: checkout_url });
-  } catch (err) {
-    console.error('Ошибка соединения с Payme:', err.message);
-    res.status(500).send('Ошибка соединения с Payme: ' + err.message);
+    res.status(200).json({ url: checkoutUrl })
+  } catch (error) {
+    console.error('Payme API error:', error?.response?.data || error.message)
+    res.status(500).send('Ошибка Payme API')
   }
-});
+})
 
+const PORT = process.env.PORT || 10000
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+  console.log(`Server running on port ${PORT}`)
+})
