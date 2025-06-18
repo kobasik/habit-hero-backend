@@ -1,45 +1,53 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json());
 
-const PAYME_URL = 'https://checkout.test.paycom.uz/api'; // для прода — без "test."
-const X_AUTH = '682af6e35a11e938e9a1f84e:tRH9In2qH?UZrCoTjMVCBRSayiPui&RCwduk'; // ← подставь своё
+const PAYME_URL = 'https://checkout.paycom.uz/api';
 
 app.post('/payme/init', async (req, res) => {
   const { name, phone } = req.body;
   const order_id = Date.now().toString();
+  const amount = 990000; // 9900 сум в тийинах
 
   const payload = {
-    method: "receipts.create",
+    method: 'receipts.create',
     params: {
-      amount: 990000,
-      account: { order_id },
-      description: "Оплата подписки"
-    }
+      amount,
+      account: {
+        order_id,
+      },
+      description: `Оплата от ${name}, ${phone}`,
+    },
   };
 
   try {
     const response = await axios.post(PAYME_URL, payload, {
       headers: {
-        'X-Auth': X_AUTH,
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+        'X-Auth': process.env.PAYME_ID + ':' + process.env.PAYME_KEY,
+      },
     });
 
-    const receipt_id = response.data.result.receipt._id;
-    const redirectUrl = `https://checkout.paycom.uz/${receipt_id}`;
+    if (response.data.error) {
+      return res.status(500).send('Payme API error: ' + response.data.error.message);
+    }
 
-    res.redirect(redirectUrl);
-  } catch (err) {
-    console.error('Ошибка Payme:', err?.response?.data || err.message);
-    res.status(500).send("Ошибка при создании счёта");
+    const receiptId = response.data.result.receipt._id;
+    const redirectUrl = `https://checkout.paycom.uz/${receiptId}`;
+    return res.redirect(redirectUrl);
+
+  } catch (error) {
+    console.error('Ошибка запроса:', error.message);
+    return res.status(500).send('Ошибка при соединении с Payme API');
   }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Сервер на порту ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
+});
