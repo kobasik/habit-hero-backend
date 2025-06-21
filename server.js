@@ -63,7 +63,8 @@ const response = await axios.post('https://checkout.paycom.uz/api', receipt, {
 console.dir(response.data, { depth: null });
 
 const receiptId = response.data.result.receipt._id;
-const paymentLink = `https://checkout.paycom.uz/${receipt_id}?redirect=https://t.me/+L8r-7R_PISkzODQy`;
+const redirectUrl = encodeURIComponent('https://t.me/+L8r-7R_PISkzODQy');
+const paymentLink = `https://checkout.paycom.uz/${receiptId}?redirect=${redirectUrl}`;
 res.status(200).json({ link: paymentLink });
 
   } catch (error) {
